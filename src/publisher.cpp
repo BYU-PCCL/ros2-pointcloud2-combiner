@@ -49,7 +49,7 @@ private:
 		{
 			transform_stamped_msg = _tf_buffer->lookupTransform("world", frame_id, rclcpp::Time(0));
 		}
-		catch (tf2::TransformException& ex)
+		catch (tf2::TransformException &ex)
 		{
 			RCLCPP_WARN(this->get_logger(), "%s", ex.what());
 			return;
@@ -71,7 +71,7 @@ private:
 		}
 
 		pcl::PointCloud<pcl::PointXYZRGB> combined_pcl_cloud;
-		for (const auto& points_pair : _point_clouds)
+		for (const auto &points_pair : _point_clouds)
 		{
 			combined_pcl_cloud += *points_pair.second;
 		}
@@ -93,7 +93,7 @@ private:
 	std::map<std::string, pcl::PointCloud<pcl::PointXYZRGB>::Ptr> _point_clouds;
 };
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
 	rclcpp::init(argc, argv);
 	rclcpp::spin(std::make_shared<MultiCloudPublisher>());
