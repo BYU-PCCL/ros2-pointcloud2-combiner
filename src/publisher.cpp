@@ -19,10 +19,10 @@ using namespace std::chrono_literals;
 #define POINTS_PATH(camera_name)                                                                                       \
 	(static_cast<std::ostringstream&&>(std::ostringstream() << "/" << camera_name << "/depth/color/points")).str()
 
-class MultiCloudNode : public rclcpp::Node
+class MultiCloudPublisher : public rclcpp::Node
 {
 public:
-	MultiCloudNode() : Node("multi_cloud")
+	MultiCloudPublisher() : Node("multi_cloud")
 	{
 		_publisher = this->create_publisher<sensor_msgs::msg::PointCloud2>("multi_cloud", 1);
 		this->declare_parameter<std::vector<std::string>>("cameras", {});
@@ -36,7 +36,7 @@ public:
 			RCLCPP_INFO(this->get_logger(), "Adding subscription for camera at path: %s", POINTS_PATH(camera_name).c_str());
 			_camera_subscriptions.push_back(this->create_subscription<sensor_msgs::msg::PointCloud2>(
 					POINTS_PATH(camera_name), rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_sensor_data)),
-					std::bind(&MultiCloudNode::point_cloud_callback, this, std::placeholders::_1)));
+					std::bind(&MultiCloudPublisher::point_cloud_callback, this, std::placeholders::_1)));
 		}
 	}
 
@@ -96,7 +96,7 @@ private:
 int main(int argc, char* argv[])
 {
 	rclcpp::init(argc, argv);
-	rclcpp::spin(std::make_shared<MultiCloudNode>());
+	rclcpp::spin(std::make_shared<MultiCloudPublisher>());
 	rclcpp::shutdown();
 	return 0;
 }
