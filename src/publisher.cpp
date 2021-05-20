@@ -32,7 +32,6 @@ public:
 private:
 	void point_cloud_callback(const sensor_msgs::msg::PointCloud2::SharedPtr msg)
 	{
-		// TODO: Don't hard-code the source frame
 		geometry_msgs::msg::TransformStamped transform_stamped_msg;
 		std::string frame_id = msg->header.frame_id;
 		try
