@@ -16,27 +16,26 @@
 
 using namespace std::chrono_literals;
 
-#define POINTS_PATH(camera_name)                                                                                       \
-	(static_cast<std::ostringstream&&>(std::ostringstream() << "/" << camera_name << "/depth/color/points")).str()
-
 class MultiCloudPublisher : public rclcpp::Node
 {
 public:
 	MultiCloudPublisher() : Node("multi_cloud")
 	{
 		_publisher = this->create_publisher<sensor_msgs::msg::PointCloud2>("multi_cloud", 1);
-		this->declare_parameter<std::vector<std::string>>("cameras", {});
-		this->get_parameter("cameras", _camera_names);
+		this->declare_parameter<std::vector<std::string>>("point_cloud_topics", {});
+		this->declare_parameter<std::string>("base_frame", "world");
+		this->get_parameter("point_cloud_topics", _point_cloud_topics);
+		this->get_parameter("base_frame", _base_frame);
 
 		_tf_buffer = std::make_shared<tf2_ros::Buffer>(this->get_clock());
 		_tf_listener = std::make_shared<tf2_ros::TransformListener>(*_tf_buffer, true);
 
-		for (auto camera_name : this->_camera_names)
+		for (auto point_cloud_topic : this->_point_cloud_topics)
 		{
-			RCLCPP_INFO(this->get_logger(), "Adding subscription for camera at path: %s", POINTS_PATH(camera_name).c_str());
-			_camera_subscriptions.push_back(this->create_subscription<sensor_msgs::msg::PointCloud2>(
-					POINTS_PATH(camera_name), rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_sensor_data)),
-					std::bind(&MultiCloudPublisher::point_cloud_callback, this, std::placeholders::_1)));
+			RCLCPP_INFO(this->get_logger(), "Adding subscription for point cloud at path: %s", point_cloud_topic.c_str());
+			_subscriptions.push_back(this->create_subscription<sensor_msgs::msg::PointCloud2>(
+				point_cloud_topic, rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(rmw_qos_profile_sensor_data)),
+				std::bind(&MultiCloudPublisher::point_cloud_callback, this, std::placeholders::_1)));
 		}
 	}
 
@@ -85,11 +84,12 @@ private:
 
 		_publisher->publish(combined_cloud);
 	}
-	std::vector<std::string> _camera_names;
-	std::vector<rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr> _camera_subscriptions;
+	std::vector<rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr> _subscriptions;
 	rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr _publisher;
+	std::vector<std::string> _point_cloud_topics;
 	std::shared_ptr<tf2_ros::Buffer> _tf_buffer;
 	std::shared_ptr<tf2_ros::TransformListener> _tf_listener;
+	std::string _base_frame;
 	std::map<std::string, pcl::PointCloud<pcl::PointXYZRGB>::Ptr> _point_clouds;
 };
 
